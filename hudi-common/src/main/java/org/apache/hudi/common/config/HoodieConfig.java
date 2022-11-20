@@ -52,6 +52,11 @@ public class HoodieConfig implements Serializable {
 
   public HoodieConfig() {
     this.props = new TypedProperties();
+    this.props = getCtestProps(); // Ctest
+  }
+
+  public HoodieConfig(boolean isCtest) {
+    this.props = new TypedProperties();
   }
 
   public HoodieConfig(Properties props) {
@@ -217,6 +222,13 @@ public class HoodieConfig implements Serializable {
     } else {
       return props;
     }
+  }
+
+  // Ctest
+  public TypedProperties getCtestProps() {
+    TypedProperties mergedProps = DFSPropertiesConfiguration.getCtestPropsFF();
+    mergedProps.putAll(props);
+    return mergedProps;
   }
 
   public void setDefaultOnCondition(boolean condition, HoodieConfig config) {

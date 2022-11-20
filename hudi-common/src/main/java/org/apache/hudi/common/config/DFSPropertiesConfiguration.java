@@ -90,6 +90,13 @@ public class DFSPropertiesConfiguration {
     this.visitedFilePaths = new HashSet<>();
   }
 
+  public DFSPropertiesConfiguration(boolean isCtest) {
+    this.hadoopConfig = null;
+    this.currentFilePath = null;
+    this.hoodieConfig = new HoodieConfig(isCtest);
+    this.visitedFilePaths = new HashSet<>();
+  }
+
   /**
    * Load global props from hudi-defaults.conf which is under class loader or CONF_FILE_DIR_ENV_NAME.
    * @return Typed Properties
@@ -117,6 +124,22 @@ public class DFSPropertiesConfiguration {
         conf.addPropsFromFile(DEFAULT_PATH);
       } catch (Exception e) {
         LOG.warn("Cannot load default config file: " + DEFAULT_PATH, e);
+      }
+    }
+    return conf.getProps();
+  }
+
+  //Ctest
+  public static TypedProperties loadCtestProps() {
+    DFSPropertiesConfiguration conf = new DFSPropertiesConfiguration(true);
+    URL configFile = Thread.currentThread().getContextClassLoader().getResource("hudi-ctest.conf");
+    if (configFile != null) {
+      try (BufferedReader br = new BufferedReader(new InputStreamReader(configFile.openStream()))) {
+        conf.addPropsFromStream(br);
+        return conf.getProps();
+      } catch (IOException ioe) {
+        throw new HoodieIOException(
+            String.format("Failed to read %s from class loader", "hudi-ctest.conf"), ioe);
       }
     }
     return conf.getProps();
@@ -192,6 +215,14 @@ public class DFSPropertiesConfiguration {
 
   public static TypedProperties getGlobalProps() {
     final TypedProperties globalProps = new TypedProperties();
+    globalProps.putAll(GLOBAL_PROPS);
+    return globalProps;
+  }
+
+  // Ctest
+  public static TypedProperties getCtestPropsFF() {
+    final TypedProperties globalProps = new TypedProperties();
+    GLOBAL_PROPS = loadCtestProps();
     globalProps.putAll(GLOBAL_PROPS);
     return globalProps;
   }
